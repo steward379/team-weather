@@ -6,6 +6,10 @@ html, body {
   /* 設定寬度為100% */
 }
 
+.left-side-background {
+  max-width: 100vw;
+}
+
 button:hover {
   cursor: pointer;
   opacity: 0.5;
