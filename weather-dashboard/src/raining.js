@@ -87,69 +87,146 @@ function getWeatherData() {
     })
     .then((data) => {
       //   console.log(data.records.locations[0].location[0]);
-      return data.records.locations[0].location[0];
+
+      console.log("當天天氣", data);
+      console.log("查詢縣市", countyValue);
+
+      for(let i = 0; i < data.records.Locations[0].Location.length; i++) {
+       if(data.records.Locations[0].Location[i].LocationName == countyValue) {
+
+        console.log("找到縣市");
+
+          for(let j = 0; j < data.records.Locations[0].Location[i].WeatherElement.length; j++) {
+            // if(data.records.Locations[0].Location[i].WeatherElement[j].ElementName == "3小時降雨機率") {
+
+            //   console.log("找到降雨機率");
+            //   // Get the precipitation probability element
+            //   const precElement = data.records.Locations[0].Location[i].WeatherElement[j];
+            //   // Find closest time period precipitation probability
+            //   const probability = findClosestPrecipitationProbability(precElement);
+            //   console.log("找到最近時間的降雨機率:", probability);
+              
+            //   // Here you can update UI elements with the probability
+            //   // For example: rainProbElement.textContent = probability + "%";
+              
+            //   return probability; // Return the probability if needed
+            // }
+            return data.records.Locations[0].Location[i];
+          }
+
+        }
+      }
+      return null;
+
+      //   console.log(data.records.locations[0].location[0].weatherElement[1].time[0].elementValue[0].value);
+      // return data.records.locations[0].location[0];
     })
     .catch((e) => {
       console.log(e);
     });
 }
 
+
 async function updateWeatherElements() {
   try {
     const weatherData = await getWeatherData();
 
-    const Wx = weatherData.weatherElement[1].time[0].elementValue[0].value;
-    const WxNum = weatherData.weatherElement[1].time[0].elementValue[1].value;
-    // console.log("天氣WX", Wx);
-    // console.log("天氣WXNum", WxNum);
-    const T = weatherData.weatherElement[3].time[0].elementValue[0].value;
-    const PoP6h = weatherData.weatherElement[7].time[0].elementValue[0].value;
-    const Ws = weatherData.weatherElement[8].time[0].elementValue[0].value;
-    console.log("風速Ws", Ws);
+    const Wx = weatherData.WeatherElement[8].Time[0].ElementValue[0].Weather;
+    console.log("天氣WX", Wx);
+    const T = weatherData.WeatherElement[0].Time[0].ElementValue[0].Temperature;
+    console.log("溫度 T", T);
+
+    const PoP3h = weatherData.WeatherElement[7].Time[0].ElementValue[0].ProbabilityOfPrecipitation;
+    console.log("PoP3h", PoP3h);
+
+    const Ws = weatherData.WeatherElement[5].Time[0].ElementValue[0].WindSpeed;
+    // 風力幾級 BeaufortScale
+    console.log("風速 Ws", Ws);
 
     const WxElement = document.getElementById("Wx");
     const TElement = document.getElementById("T");
-    const PoP6hElement = document.getElementById("PoP6h");
+    const PoP3hElement = document.getElementById("PoP3h");
     const WsElement = document.getElementById("Ws");
 
     const lastWx = WxElement.textContent;
     const nowWx = `${Wx}天`;
     // const lastTel = TElement.textContent.replace(/℃/g, "");
     // const nowTel = `${T}`;
-    // const lastPoP6h = PoP6hElement.textContent.replace(/%/g, "");
-    // const nowPoP6h = `${PoP6h}`;
+    // const lastPoP3h = PoP3hElement.textContent.replace(/%/g, "");
+    // const nowPoP3h = `${PoP3h}`;
     // const lastWs = WsElement.textContent.replace(/m\/s/g, "").trim();
     // const nowWs = `${Ws}`;
 
     const lastTel = parseInt(TElement.textContent.replace(/℃/g, ""), 10);
     const nowTel = parseInt(`${T}`, 10);  // 請將"新的T值"替換為實際的值
 
-    const lastPoP6h = parseInt(PoP6hElement.textContent.replace(/%/g, ""), 10);
-    console.log("剛才的降雨率", lastPoP6h)
-    const nowPoP6h = parseInt(`${PoP6h}`, 10);  // 請將"新的PoP6h值"替換為實際的值
+    const lastPoP3h = parseInt(PoP3hElement.textContent.replace(/%/g, ""), 10);
+    console.log("剛才的降雨率", lastPoP3h)
+    const nowPoP3h = parseInt(`${PoP3h}`, 10);  // 請將"新的PoP6h值"替換為實際的值
 
     const lastWs = Math.round(parseFloat(WsElement.textContent.replace(/m\/s/g, "").trim()));
     const nowWs = Math.round(parseFloat(`${Ws}`));  // 請將"新的Ws值"替換為實際的值
 
     animateValue("T", lastTel, nowTel, 1800, "°C", "T" );
-    animateValue("PoP6h", lastPoP6h, nowPoP6h, 300,  "%", "PoP6h");
+    animateValue("PoP3h", lastPoP3h, nowPoP3h, 300,  "%", "PoP3h");
     animateValue("Ws", lastWs, nowWs, 1000, " m/s", "Ws");
 
     // animateValue("AQI", 50, 100, 2000, "", aqi);
 
     WxElement.textContent = `${Wx}天`;
     TElement.textContent = `${T} ℃`;
-    PoP6hElement.textContent = `${PoP6h}%`;
+    PoP3hElement.textContent = `${PoP3h}%`;
     WsElement.textContent = `${Ws} m/s`;
 
     changeWXImg(WxNum, sunRiseTimeGlobal, sunSetTimeGlobal);
     changeWsImg(Ws);
-    changePopImg(PoP6h);
+    changePopImg(PoP3h);
     changeTImg(T);
 
   } catch (e) {
     console.log(e);
   }
+}
+
+function findClosestPrecipitationProbability(weatherElement) {
+  // Get current time
+  const now = new Date();
+  
+  let closestPeriod = null;
+  let smallestDifference = Infinity;
+  
+  // Iterate through all time periods
+  for (const timeItem of weatherElement.Time) {
+    const startTime = new Date(timeItem.StartTime);
+    const endTime = new Date(timeItem.EndTime);
+    
+    // Check if current time is within this period
+    if (now >= startTime && now < endTime) {
+      // We're in this period now, return it immediately
+      return timeItem.ElementValue[0].ProbabilityOfPrecipitation;
+    }
+    
+    // Calculate time difference to the start of the period
+    let difference;
+    if (startTime > now) {
+      // Future period - we prefer these
+      difference = startTime - now;
+    } else {
+      // Past period - less preferred, add a penalty
+      difference = (now - endTime) + 3600000; // Add 1 hour penalty for past periods
+    }
+    
+    if (difference < smallestDifference) {
+      smallestDifference = difference;
+      closestPeriod = timeItem;
+    }
+  }
+  
+  if (closestPeriod) {
+    return closestPeriod.ElementValue[0].ProbabilityOfPrecipitation;
+  }
+  
+  return null;
 }
 
 // 36小時天氣

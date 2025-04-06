@@ -61,5 +61,5 @@ function changePokemon(cityName, pokemon){
         footer.style.transition = "background-color 0.5s";
     };
 
-    pokemonWelcome.textContent = `我們是來自 ${cityName} 的團隊 ！ 去吧，${pokemonKing}! `;
+    pokemonWelcome.textContent = `我們是來自 ${cityName} 的團隊 ！ 去吧，${pokemonKing} ! `;
 };
